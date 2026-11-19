@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b5d3b">
+<title>OPLAYING – Fantasy Football</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f0;--card:#fff;--ink:#10231a;--mute:#5c6f65;--turf:#0b5d3b;--turf2:#08452c;--kit:#f4c20d;--line:#d5e0da;--bad:#b3261e;--ok:#1b7a3e}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 Barlow,system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:70px}
+h1,h2,h3{font-family:'Barlow Condensed',sans-serif;margin:0 0 8px;letter-spacing:.2px}h1{font-size:34px}h2{font-size:24px}h3{font-size:18px}
+header{background:var(--turf);color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+.logo{font:800 26px 'Barlow Condensed';letter-spacing:1px}.logo b{color:var(--kit)}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--turf2);display:flex;z-index:5}
+nav button{flex:1;background:none;border:0;color:#bcd5c8;padding:10px 2px;font:600 12px Barlow;cursor:pointer}nav button.on{color:var(--kit);box-shadow:inset 0 3px var(--kit)}
+main{max-width:980px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sp{justify-content:space-between}
+button.b,a.b{background:var(--turf);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:600 14px Barlow;cursor:pointer}
+button.b.y{background:var(--kit);color:var(--ink)}button.b.g{background:#e3ebe6;color:var(--ink)}button.b.r{background:var(--bad)}button.b:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--kit);outline-offset:1px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+label{display:block;font-weight:600;margin:8px 0 3px;font-size:13px}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:#e3ebe6}
+.pill.GK{background:#fde9a8}.pill.DEF{background:#c9e7d6}.pill.MID{background:#cfe0f6}.pill.FWD{background:#f7cfcf}
+.warn{background:#fff6d6;border:1px solid #ecd27a;padding:10px;border-radius:8px;margin-bottom:12px;font-size:13px}
+.err{color:var(--bad);font-size:13px;margin:6px 0}.ok{color:var(--ok)}.mute{color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:7px 5px;border-bottom:1px solid var(--line)}
+.scroll{overflow-x:auto}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.pitch{background:linear-gradient(#0f7a4b,#0b5d3b);border-radius:10px;padding:12px 4px;color:#fff}
+.line{display:flex;justify-content:center;gap:6px;margin:10px 0;flex-wrap:wrap}
+.pl{background:#fff;color:var(--ink);border-radius:8px;padding:5px 7px;min-width:78px;text-align:center;font-size:12px;position:relative;cursor:pointer}
+.pl b{display:block;font-size:13px}.pl .cap{position:absolute;top:-7px;right:-5px;background:var(--kit);border-radius:50%;width:19px;height:19px;font-weight:800;font-size:11px;line-height:19px}
+.bench{background:#e3ebe6;border-radius:10px;padding:8px;margin-top:8px}.bench .pl{border:1px solid var(--line)}
+.stat{font:800 30px 'Barlow Condensed'}
+.plist{max-height:420px;overflow:auto}.plist .r{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);gap:6px}
+.sel{background:#e7f4ec}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useMemo,useCallback}=React;
+
+/* ================= CONFIG =================
+ Paste your Firebase web config below. Leave null to run in DEMO MODE (data stays in this browser only). */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCGS_76v0c2eN8z1tyTrs_eTeKZ_ld06S8",
+  authDomain: "fluent-jax.firebaseapp.com",
+  projectId: "fluent-jax",
+  storageBucket: "fluent-jax.firebasestorage.app",
+  messagingSenderId: "626832526838",
+  appId: "1:626832526838:web:2793b8a74f5ca5ec6a0bd7"
+};
+/* e.g. {apiKey:"...",authDomain:"...",projectId:"...",storageBucket:"...",messagingSenderId:"...",appId:"..."} */
+const REAL_MONEY_ENABLED = false; // keep false until secure server-side execution + licensing exist
+const ADMIN_EMAIL = "oladejiridwanopeyemi@gmail.com"; // admin recognised by email (must match your Firestore rules)
+const BANK = {bank:"(set OPLAYING bank name)",acct:"(account number)",name:"OPlaying Ltd."};
+
+const BUDGET=100, QUOTA={GK:2,DEF:5,MID:5,FWD:3};
+const LEVELS=[{id:"Rookie",fee:200},{id:"Pro",fee:1000},{id:"Baller King",fee:5000}];
+const naira=n=>"₦"+Number(n).toLocaleString("en-NG");
+const mil=n=>"₦"+n.toFixed(1)+"M";
+
+/* SAMPLE players: real EPL names, but PLACEHOLDER prices (₦M) and no stats. Replace via admin import (API). */
+const SEED=`Alisson|Liverpool|GK|9.5;Raya|Arsenal|GK|9;Sánchez|Chelsea|GK|8;Pickford|Everton|GK|8.5;Dúbravka|Man City|GK|7
+Gabriel|Arsenal|DEF|11;Saliba|Arsenal|DEF|11;Van Dijk|Liverpool|DEF|11.5;Gvardiol|Man City|DEF|10.5;Trent|Liverpool|DEF|12;Porro|Tottenham|DEF|9;Gusto|Chelsea|DEF|8.5;Robertson|Liverpool|DEF|9.5;Lacroix|Crystal Palace|DEF|8;Pedro Porro|Tottenham|DEF|8.5;Mykolenko|Everton|DEF|6.5;Dalot|Man United|DEF|7
+Saka|Arsenal|MID|20;Palmer|Chelsea|MID|20;Salah|Liverpool|MID|24;Foden|Man City|MID|17;Bruno Fernandes|Man United|MID|18;Son|Tottenham|MID|17;Rice|Arsenal|MID|13;Mbeumo|Man United|MID|16;Gibbs-White|Nottm Forest|MID|13;Maddison|Tottenham|MID|14;Mac Allister|Liverpool|MID|13;Odegaard|Arsenal|MID|17;Enzo|Chelsea|MID|12.5;Doku|Man City|MID|12
+Haaland|Man City|FWD|28;Isak|Newcastle|FWD|20;Watkins|Aston Villa|FWD|17;Havertz|Arsenal|FWD|15;Jackson|Chelsea|FWD|13;Solanke|Tottenham|FWD|14;Wood|Nottm Forest|FWD|12;Calvert-Lewin|Everton|FWD|10`;
+const PLAYERS=SEED.split(/[;\n]/).filter(Boolean).map((s,i)=>{const[n,c,p,pr]=s.split("|");return{id:"p"+i,name:n,club:c,pos:p,price:+pr,form:0,pts:0,sel:0,st:"a",min:0,ti:0,to:0}});
+
+/* ================= RULES ENGINE ================= */
+function playerPoints(pos,s,captain){ // s: {min,goals,assists,cs,yc,rc,og,pensSaved,postponed}
+  if(s.postponed) return captain?2:1;
+  if(!s.min) return 0;
+  let p=s.min>=60?2:1; p-=s.yc||0; p-=3*(s.rc||0); p-=2*(s.og||0);
+  const g=pos==="FWD"?10:pos==="MID"?8:12, a=pos==="FWD"?5:6, cs=pos==="MID"?2:(pos==="DEF"||pos==="GK")?5:0;
+  p+=g*(s.goals||0)+a*(s.assists||0)+(s.cs?cs:0)+(pos==="GK"?6*(s.pensSaved||0):0);
+  return captain?p*2:p;
+}
+function prizeTable(gross){return[.25,.10,.05,.025,.025,.025,.025,.025,.025,.025].map(r=>Math.round(gross*r))} // 25+10+5+7*2.5=57.5%
+function distribute(scores,table){ // scores sorted desc [{id,pts}] -> prize per id; ties share combined prizes and skip occupied ranks
+  const out={};let i=0;
+  while(i<scores.length&&i<10){let j=i;while(j+1<scores.length&&scores[j+1].pts===scores[i].pts)j++;
+    let pool=0;for(let k=i;k<=j&&k<10;k++)pool+=table[k]||0;const share=Math.floor(pool/(j-i+1));
+    for(let k=i;k<=j;k++)out[scores[k].id]=share;i=j+1}
+  return out;
+}
+const lineupOK=(ids,xi)=>{const c={GK:0,DEF:0,MID:0,FWD:0};xi.forEach(id=>c[PLAYERS.find(p=>p.id===id).pos]++);return xi.length===11&&c.GK===1&&c.DEF>=3&&c.MID>=2&&c.FWD>=1}
+
+
+const pp=(id,live,cap)=>{const p=PLAYERS.find(x=>x.id===id),s=live&&live.stats&&live.stats[id];return p&&s?playerPoints(p.pos,{min:s[0],goals:s[1],assists:s[2],cs:s[3],yc:s[4],rc:s[5],og:s[6],pensSaved:s[7]},cap):0};
+const entryPts=(e,live)=>(e.xi||[]).reduce((t,id)=>t+pp(id,live,id===e.cap),0);
+const showPts=(e,live)=>e.adj?e.pts:(live&&live.gw===e.gw?entryPts(e,live):(e.pts||0));
+const toLocal=s=>{const d=new Date(s);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+/* Free football data: official Fantasy Premier League public API (no key). It has no CORS header, so the browser reaches it via free CORS proxies; if all fail, admin can paste the JSON. */
+async function fpl(path){const url="https://fantasy.premierleague.com/api/"+path;
+  const px=[u=>"https://corsproxy.io/?url="+encodeURIComponent(u),u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),u=>"https://api.codetabs.com/v1/proxy?quest="+u];
+  for(const p of px){try{const r=await fetch(p(url));if(r.ok)return await r.json()}catch(e){}}
+  throw Error("Free CORS proxies are unreachable right now. Use 'Paste JSON' below, or try again later.")}
+/* Price algorithm (documented): among players who have played, rise +0.1 if net transfers-in this round is in the top 5% and form is at/above median; fall -0.1 if net transfers are in the bottom 5% (negative) and form is at/below median. Manually edited prices are skipped. Uses real API fields only. */
+function priceMoves(P,cfg){const act=P.filter(p=>p.min>0);if(act.length<20)return[];
+  const nets=act.map(p=>p.ti-p.to).sort((a,b)=>a-b),hi=nets[Math.floor(nets.length*.95)],lo=nets[Math.floor(nets.length*.05)];
+  const f=act.map(p=>p.form).sort((a,b)=>a-b),mid=f[Math.floor(f.length/2)];
+  return P.filter(p=>p.min>0&&!(cfg.manual||{})[p.id]).map(p=>{const n=p.ti-p.to;let d=0;if(n>0&&n>=hi&&p.form>=mid)d=.1;else if(n<0&&n<=lo&&p.form<=mid&&p.price>3.5)d=-.1;return d?{p,d}:null}).filter(Boolean)}
+
+/* ================= DATA LAYER (Firebase or demo) ================= */
+let fb=null;
+if(FIREBASE_CONFIG&&window.firebase){firebase.initializeApp(FIREBASE_CONFIG);fb={a:firebase.auth(),d:firebase.firestore()}}
+const LS={g:k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},s:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+const blank=(name,email,dob)=>({name,email,dob,wallet:0,reserved:0,tx:[],deposits:[],withdrawals:[],squad:null,entries:[],freeUsed:false,suspended:false,limits:{d:0,w:0,m:0},excluded:null,created:Date.now()});
+const API={
+  async signUp(name,email,pw,dob){
+    if(fb){const c=await fb.a.createUserWithEmailAndPassword(email,pw);await c.user.updateProfile({displayName:name});const st=blank(name,email,dob);await fb.d.collection("users").doc(c.user.uid).set(st);return{uid:c.user.uid,email}}
+    if(LS.g("op_u_"+email))throw Error("An account with this email already exists.");
+    LS.s("op_u_"+email,{pw,st:blank(name,email,dob)});LS.s("op_sess",email);return{uid:email,email}},
+  async signIn(email,pw){
+    if(fb){const c=await fb.a.signInWithEmailAndPassword(email,pw);return{uid:c.user.uid,email}}
+    const u=LS.g("op_u_"+email);if(!u||u.pw!==pw)throw Error("Wrong email or password.");LS.s("op_sess",email);return{uid:email,email}},
+  async reset(email){if(fb)await fb.a.sendPasswordResetEmail(email);else if(!LS.g("op_u_"+email))throw Error("No account with that email.")},
+  async out(){if(fb)await fb.a.signOut();else localStorage.removeItem("op_sess")},
+  restore(cb){if(fb)return fb.a.onAuthStateChanged(u=>cb(u?{uid:u.uid,email:u.email}:null));const e=LS.g("op_sess");cb(e?{uid:e,email:e}:null);return()=>{}},
+  async load(uid){if(fb){const d=await fb.d.collection("users").doc(uid).get();return d.exists?d.data():null}const u=LS.g("op_u_"+uid);return u&&u.st},
+  async save(uid,st){if(fb)await fb.d.collection("users").doc(uid).set(st);else{const u=LS.g("op_u_"+uid);LS.s("op_u_"+uid,{...u,st})}},
+  async isAdmin(u){return (u.email||"").toLowerCase()===ADMIN_EMAIL} /* UI only; real protection is in Firestore rules */,
+  async all(){if(fb){const s=await fb.d.collection("users").get();return s.docs.map(d=>({uid:d.id,st:d.data()}))}
+    return Object.keys(localStorage).filter(k=>k.startsWith("op_u_")).map(k=>({uid:k.slice(5),st:LS.g(k).st}))},
+  async doc(n,def){if(fb){const d=await fb.d.collection("config").doc(n).get();return d.exists?d.data():def}return LS.g("op_doc_"+n)||def},
+  async setDoc(n,v){if(fb)await fb.d.collection("config").doc(n).set(v);else LS.s("op_doc_"+n,v)},
+  async cfg(){return{gw:1,kickoff:"",maxClub:2,prices:{},manual:{},out:{},hidden:{},final:{},minPool:{},...(await API.doc("main",{}))}},
+  async putReceipt(id,uid,data){if(fb)await fb.d.collection("receipts").doc(id).set({uid,data,t:Date.now()});else LS.s("op_rc_"+id,{uid,data})},
+  async getReceipt(id){if(fb){const d=await fb.d.collection("receipts").doc(id).get();return d.exists?d.data():null}return LS.g("op_rc_"+id)},
+  async setCfg(c){await API.setDoc("main",c)}
+};
+/* Image compressor: resizes (max 1000px) and lowers JPEG quality, then size, until under ~150 KB so it fits Firestore comfortably */
+function compress(file,max=200000){return new Promise((res,rej)=>{const img=new Image(),r=new FileReader();r.onerror=()=>rej(Error("Could not read file"));
+  r.onload=()=>{img.onload=()=>{let w=Math.min(1000,img.width),q=.7;const draw=()=>{const c=document.createElement("canvas");c.width=w;c.height=Math.round(img.height*w/img.width);const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);return c.toDataURL("image/jpeg",q)};
+    let d=draw();while(d.length>max&&(q>.31||w>400)){if(q>.31)q-=.1;else w=Math.round(w*.8);d=draw()}
+    d.length>max?rej(Error("Image is too detailed to compress enough. Use a screenshot of the receipt.")):res(d)};img.onerror=()=>rej(Error("That file is not a valid image."));img.src=r.result};r.readAsDataURL(file)})}
+const age=d=>{const b=new Date(d),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a};
+
+/* ================= APP ================= */
+function App(){
+  const[user,setUser]=useState(undefined),[st,setSt]=useState(null),[admin,setAdmin]=useState(false),[cfg,setCfg]=useState(null),[D,setD]=useState(null),[tab,setTab]=useState("home");
+  const reload=()=>Promise.all([API.cfg(),API.doc("players",{list:[]}),API.doc("gws",{list:[]}),API.doc("live",{gw:0,stats:{}}),API.doc("lb",{rows:[],overall:[]})]).then(([c,pl,g,lv,lb])=>{if(pl.list.length)PLAYERS.splice(0,PLAYERS.length,...pl.list);setCfg(c);setD({gws:g.list,live:lv,lb})});
+  useEffect(()=>API.restore(u=>setUser(u)),[]);
+  useEffect(()=>{if(!user){setSt(null);setAdmin(false);return}
+    API.load(user.uid).then(setSt);API.isAdmin(user).then(setAdmin).catch(()=>setAdmin(false));reload()},[user]);
+  useEffect(()=>{const m={name:"OPLAYING",short_name:"OPLAYING",start_url:".",display:"standalone",background_color:"#0b5d3b",theme_color:"#0b5d3b",icons:[{src:"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='#0b5d3b'/><text x='50' y='68' font-size='60' text-anchor='middle' fill='#f4c20d' font-family='sans-serif' font-weight='bold'>O</text></svg>"),sizes:"512x512",type:"image/svg+xml"}]};const l=document.createElement("link");l.rel="manifest";l.href="data:application/json,"+encodeURIComponent(JSON.stringify(m));document.head.appendChild(l)},[]);
+  const update=useCallback(async fn=>{const n=fn(JSON.parse(JSON.stringify(st)));setSt(n);await API.save(user.uid,n)},[st,user]);
+  if(user===undefined)return <main>Loading…</main>;
+  if(!user)return <Auth onDone={setUser}/>;
+  if(!st||!cfg||!D)return <main>Loading your account…</main>;
+  if(st.suspended)return <main><div className="card"><h2>Account suspended</h2><p>Contact support@oplaying.com.</p><button className="b" onClick={()=>API.out().then(()=>setUser(null))}>Log out</button></div></main>;
+  const P=PLAYERS.map(p=>({...p,price:cfg.prices[p.id]??p.price}));
+  const tabs=[["home","Home"],["squad","Squad"],["play","Play"],["board","Ranks"],["wallet","Wallet"],["info","Rules"],...(admin?[["admin","Admin"]]:[])];
+  const lock=cfg.kickoff?new Date(new Date(cfg.kickoff).getTime()-30*60000):null, locked=lock&&Date.now()>=lock.getTime();
+  const props={st,update,P,cfg,setCfg,user,locked,lock,setTab,D,reload};
+  return <>
+    <header><div className="logo">O<b>PLAYING</b></div><div className="row"><span style={{fontSize:13}}>{st.name.split(" ")[0]} · {naira(st.wallet-st.reserved)}</span><button className="b y" onClick={()=>API.out().then(()=>setUser(null))}>Log out</button></div></header>
+    <main>
+      {!fb&&<div className="warn"><b>Demo mode.</b> No Firebase config yet, so data is saved in this browser only. Paste your config at the top of index.html to go live.</div>}
+      {!REAL_MONEY_ENABLED&&<div className="warn"><b>Real-money features are switched off.</b> Deposits, entries and withdrawals here use test credits only until secure server-side handling and licensing are in place.</div>}
+      {tab==="home"&&<Home {...props}/>}{tab==="squad"&&<Squad {...props}/>}{tab==="play"&&<Play {...props}/>}
+      {tab==="board"&&<Board {...props}/>}{tab==="wallet"&&<Wallet {...props}/>}{tab==="info"&&<Info/>}{tab==="admin"&&admin&&<Admin {...props}/>}
+    </main>
+    <nav>{tabs.map(([k,l])=><button key={k} className={tab===k?"on":""} onClick={()=>setTab(k)}>{l}</button>)}</nav>
+  </>
+}
+
+function Auth({onDone}){
+  const[mode,setMode]=useState("in"),[f,setF]=useState({name:"",email:"",pw:"",pw2:"",dob:"",ok:false}),[err,setErr]=useState(""),[msg,setMsg]=useState("");
+  const set=k=>e=>setF({...f,[k]:e.target.type==="checkbox"?e.target.checked:e.target.value});
+  async function go(e){e.preventDefault();setErr("");setMsg("");
+    try{
+      if(mode==="reset"){await API.reset(f.email);setMsg("Password reset link sent. Check your email.");return}
+      if(mode==="up"){
+        if(f.name.trim().split(/\s+/).length<2)throw Error("Enter your full name.");
+        if(f.pw.length<6)throw Error("Password must be at least 6 characters.");
+        if(f.pw!==f.pw2)throw Error("Passwords do not match.");
+        if(!f.dob||age(f.dob)<18)throw Error("You must be 18 or older to join.");
+        if(!f.ok)throw Error("Accept the terms and confirm you have one account only.");
+        onDone(await API.signUp(f.name.trim(),f.email.trim().toLowerCase(),f.pw,f.dob))}
+      else onDone(await API.signIn(f.email.trim().toLowerCase(),f.pw));
+    }catch(x){setErr(x.message.replace("Firebase: ",""))}}
+  return <main style={{maxWidth:420}}>
+    <div className="logo" style={{color:"var(--turf)",fontSize:44}}>O<b style={{color:"var(--ink)"}}>PLAYING</b></div>
+    <p className="mute">Pick 15 Premier League players. Win cash prizes every Gameweek. 18+ only.</p>
+    <form className="card" onSubmit={go}>
+      <h2>{mode==="in"?"Log in":mode==="up"?"Create account":"Reset password"}</h2>
+      {mode==="up"&&<><label>Full name</label><input value={f.name} onChange={set("name")} autoComplete="name"/></>}
+      <label>Email address</label><input type="email" value={f.email} onChange={set("email")} autoComplete="email" required/>
+      {mode!=="reset"&&<><label>Password</label><input type="password" value={f.pw} onChange={set("pw")} autoComplete={mode==="up"?"new-password":"current-password"} required/></>}
+      {mode==="up"&&<><label>Confirm password</label><input type="password" value={f.pw2} onChange={set("pw2")}/><label>Date of birth</label><input type="date" value={f.dob} onChange={set("dob")}/>
+        <label style={{fontWeight:400}}><input type="checkbox" style={{width:"auto"}} checked={f.ok} onChange={set("ok")}/> I am 18+, this is my only account, and I accept the Terms and Privacy Policy.</label></>}
+      {err&&<div className="err">{err}</div>}{msg&&<div className="ok">{msg}</div>}
+      <div className="row" style={{marginTop:10}}><button className="b y" style={{flex:1}}>{mode==="in"?"Log in":mode==="up"?"Sign up":"Send reset link"}</button></div>
+      <div className="row sp" style={{marginTop:10}}>
+        <button type="button" className="b g" onClick={()=>{setMode(mode==="in"?"up":"in");setErr("")}}>{mode==="in"?"New here? Sign up":"Back to log in"}</button>
+        {mode==="in"&&<button type="button" className="b g" onClick={()=>setMode("reset")}>Forgot password</button>}</div>
+    </form></main>
+}
+
+function Home({st,cfg,locked,lock,setTab}){
+  const n=st.squad?st.squad.ids.length:0;
+  return <>
+    <h1>Gameweek {cfg.gw}</h1>
+    <div className="grid">
+      <div className="card"><div className="mute">Deadline</div><div className="stat">{lock?lock.toLocaleString():"Not set yet"}</div><div className={locked?"err":"mute"}>{locked?"Teams are locked":cfg.kickoff?"Locks 30 min before first kick-off":"Awaiting fixtures from admin"}</div></div>
+      <div className="card"><div className="mute">Your squad</div><div className="stat">{st.squad?"Saved ✓":"Not built"}</div><button className="b" onClick={()=>setTab("squad")}>{st.squad?"Edit squad":"Build squad"}</button></div>
+      <div className="card"><div className="mute">Wallet (available)</div><div className="stat">{naira(st.wallet-st.reserved)}</div>{!st.freeUsed&&<div className="ok">You have 1 free Rookie entry.</div>}<button className="b y" onClick={()=>setTab("play")}>Enter a competition</button></div>
+    </div>
+    <div className="card"><h3>Prize split (57.5% of entries)</h3><p className="mute">1st 25%, 2nd 10%, 3rd 5%, 4th–10th 2.5% each of total entry fees. 42.5% is platform revenue.</p></div>
+  </>
+}
+
+function Squad({st,update,P,cfg,locked}){
+  const sq=st.squad||{ids:[],xi:[],cap:null};
+  const okId=id=>PLAYERS.some(p=>p.id===id);const[ids,setIds]=useState(sq.ids.filter(okId)),[xi,setXi]=useState(sq.xi.filter(okId)),[cap,setCap]=useState(okId(sq.cap)?sq.cap:null);
+  const[pos,setPos]=useState("ALL"),[q,setQ]=useState(""),[msg,setMsg]=useState("");
+  const by=id=>P.find(p=>p.id===id), sel=ids.map(by);
+  const cost=sel.reduce((a,p)=>a+p.price,0), left=BUDGET-cost;
+  const cnt=p=>sel.filter(x=>x.pos===p).length, clubN=c=>sel.filter(x=>x.club===c).length;
+  const toggle=p=>{if(locked)return;setMsg("");if(cfg.out[p.id]&&!ids.includes(p.id))return setMsg(p.name+" is unavailable.");
+    if(ids.includes(p.id)){setIds(ids.filter(i=>i!==p.id));setXi(xi.filter(i=>i!==p.id));if(cap===p.id)setCap(null);return}
+    if(cnt(p.pos)>=QUOTA[p.pos])return setMsg(`Already have ${QUOTA[p.pos]} ${p.pos}.`);
+    if(clubN(p.club)>=cfg.maxClub)return setMsg(`Max ${cfg.maxClub} players from ${p.club}.`);
+    if(p.price>left)return setMsg("Not enough budget.");
+    setIds([...ids,p.id])};
+  const toXI=id=>{if(locked)return;if(xi.includes(id)){setXi(xi.filter(i=>i!==id));if(cap===id)setCap(null)}else if(xi.length<11)setXi([...xi,id])};
+  const full=ids.length===15&&["GK","DEF","MID","FWD"].every(k=>cnt(k)===QUOTA[k]);
+  const xiOk=full&&lineupOK(ids,xi)&&cap&&xi.includes(cap), valid=full&&xiOk&&cost<=BUDGET;
+  const save=()=>{update(s=>{s.squad={ids,xi,cap};return s});setMsg("Squad saved ✓")};
+  const list=P.filter(p=>(pos==="ALL"||p.pos===pos)&&p.name.toLowerCase().includes(q.toLowerCase())||p.club.toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.pts-a.pts).slice(0,80);
+  const Pl=({id})=>{const p=by(id);return <div className="pl" onClick={()=>toXI(id)}>{cap===id&&<span className="cap">C</span>}<b>{p.name}</b>{p.club}<br/>{mil(p.price)}</div>};
+  const row=ps=><div className="line">{ps.map(id=><Pl key={id} id={id}/>)}</div>;
+  const inXI=k=>xi.filter(id=>by(id).pos===k), bench=ids.filter(i=>!xi.includes(i));
+  return <>
+    <h1>Squad</h1>
+    <div className="card row sp"><div><div className="mute">Budget left</div><div className="stat" style={{color:left<0?"var(--bad)":""}}>{mil(left)}</div></div>
+      <div><div className="mute">Cost</div><div className="stat">{mil(cost)}</div></div><div><div className="mute">Picked</div><div className="stat">{ids.length}/15</div></div>
+      <div className="mute">{Object.keys(QUOTA).map(k=><div key={k}>{k}: {QUOTA[k]-cnt(k)} left</div>)}</div></div>
+    {locked&&<div className="warn">Deadline passed. Teams are locked for this Gameweek.</div>}
+    <div className="grid">
+      <div className="card"><h3>Player pool</h3><div className="row"><select value={pos} onChange={e=>setPos(e.target.value)} style={{width:100}}>{["ALL","GK","DEF","MID","FWD"].map(x=><option key={x}>{x}</option>)}</select><input placeholder="Search" value={q} onChange={e=>setQ(e.target.value)} style={{flex:1}}/></div>
+        <p className="mute">Top 80 by points shown; search by name or club. Max {cfg.maxClub} per club.</p>
+        <div className="plist">{list.map(p=><div key={p.id} className={"r "+(ids.includes(p.id)?"sel":"")}><div><b>{p.name}</b> <span className={"pill "+p.pos}>{p.pos}</span><div className="mute">{p.club} · {p.pts} pts · form {p.form} · {p.sel}% picked{p.st!=="a"||cfg.out[p.id]?" · ⚠ doubtful":""}</div></div><div className="row"><b>{mil(p.price)}</b><button className={"b "+(ids.includes(p.id)?"r":"")} disabled={locked} onClick={()=>toggle(p)}>{ids.includes(p.id)?"Remove":"Add"}</button></div></div>)}</div></div>
+      <div><div className="pitch"><div className="mute" style={{color:"#cfe",textAlign:"center"}}>Tap a player to add/remove from Starting XI ({xi.length}/11)</div>
+        {row(inXI("FWD"))}{row(inXI("MID"))}{row(inXI("DEF"))}{row(inXI("GK"))}</div>
+        <div className="bench"><b>Substitutes ({bench.length}/4)</b><div className="line">{bench.map(id=><Pl key={id} id={id}/>)}</div></div>
+        <div className="card" style={{marginTop:10}}><label>Captain (from Starting XI, points ×2)</label>
+          <select value={cap||""} disabled={locked} onChange={e=>setCap(e.target.value||null)}><option value="">Choose captain</option>{xi.map(id=><option key={id} value={id}>{by(id).name}</option>)}</select>
+          {msg&&<div className={msg.includes("✓")?"ok":"err"}>{msg}</div>}
+          {!valid&&<p className="mute">To save: 15 players (2 GK, 5 DEF, 5 MID, 3 FWD), within budget, XI with 1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD, and a captain.</p>}
+          <button className="b y" disabled={!valid||locked} onClick={save}>Save squad</button></div></div>
+    </div></>
+}
+
+function Play({st,update,cfg,locked,D}){
+  const[lvl,setLvl]=useState("Rookie"),[name,setName]=useState(""),[msg,setMsg]=useState(""),[open,setOpen]=useState(null);
+  const L=LEVELS.find(l=>l.id===lvl), mine=st.entries.filter(e=>e.gw===cfg.gw&&e.level===lvl);
+  const free=lvl==="Rookie"&&!st.freeUsed, avail=st.wallet-st.reserved, exOn=st.excluded&&Date.now()<st.excluded;
+  const isOpen=!!cfg.kickoff&&!(cfg.hidden||{})[cfg.gw]&&new Date(cfg.kickoff).getTime()-Date.now()<=14*864e5;
+  function enter(){setMsg("");
+    if(exOn)return setMsg("You are self-excluded.");
+    if(locked)return setMsg("Deadline passed.");
+    if(!isOpen)return setMsg("This Gameweek is not open yet (opens 2 weeks before the first match).");
+    if(!st.squad)return setMsg("Save your squad first (Squad tab).");
+    if(mine.length>=3)return setMsg("Maximum 3 teams per level per Gameweek.");
+    if(!name.trim())return setMsg("Give your team a name.");
+    if(!free&&avail<L.fee)return setMsg("Not enough balance. Deposit first.");
+    update(s=>{if(!free){s.wallet-=L.fee;s.tx.unshift({t:"Entry fee – "+lvl,a:-L.fee,d:Date.now()})}else{s.freeUsed=true;s.tx.unshift({t:"Free Rookie entry",a:0,d:Date.now()})}
+      s.entries.push({id:Date.now()+"",gw:cfg.gw,level:lvl,team:name.trim(),...s.squad,pts:0,fee:free?0:L.fee,d:Date.now()});return s});
+    setName("");setMsg("Entered ✓ Your team is now locked for this Gameweek.")}
+  const oe=st.entries.find(e=>e.id===open);
+  return <>
+    <h1>Competitions</h1>
+    <div className="grid">{LEVELS.map(l=><div key={l.id} className="card" style={lvl===l.id?{borderColor:"var(--turf)",borderWidth:2}:{}}><h3>{l.id}</h3><div className="stat">{naira(l.fee)}</div><p className="mute">{st.entries.filter(e=>e.gw===cfg.gw&&e.level===l.id).length}/3 of your teams entered</p><button className="b" onClick={()=>setLvl(l.id)}>Select</button></div>)}</div>
+    <div className="card"><h3>Enter {lvl} – Gameweek {cfg.gw}</h3>
+      <label>Team name</label><input value={name} onChange={e=>setName(e.target.value)} maxLength={24}/>
+      <p>{free?<span className="ok">Your first Rookie entry is free (one per account).</span>:<>Fee: <b>{naira(L.fee)}</b> from wallet.</>}</p>
+      {msg&&<div className={msg.includes("✓")?"ok":"err"}>{msg}</div>}<button className="b y" onClick={enter}>Submit entry</button></div>
+    <div className="card"><h3>My teams (tap for player points)</h3><div className="scroll"><table><thead><tr><th>GW</th><th>Level</th><th>Team</th><th>Pts</th></tr></thead><tbody>{st.entries.length?st.entries.map(e=><tr key={e.id} onClick={()=>setOpen(open===e.id?null:e.id)} style={{cursor:"pointer"}}><td>{e.gw}</td><td>{e.level}</td><td>{e.team}</td><td><b>{showPts(e,D.live)}</b></td></tr>):<tr><td colSpan="4" className="mute">No entries yet.</td></tr>}</tbody></table></div></div>
+    {oe&&<div className="card"><h3>{oe.team} – player points</h3><table><tbody>{(oe.xi||[]).map(id=>{const p=PLAYERS.find(x=>x.id===id);return p&&<tr key={id}><td>{p.name}{id===oe.cap&&<b> (C ×2)</b>}</td><td><span className={"pill "+p.pos}>{p.pos}</span></td><td>{pp(id,D.live,id===oe.cap)}</td></tr>})}</tbody></table>
+      <p className="mute">Points update when admin loads live data (last: {D.live.t?new Date(D.live.t).toLocaleString():"never"}).</p></div>}</>
+}
+
+function Board({D,cfg}){
+  const[t,setT]=useState("gw"),[lv,setLv]=useState("All");const lb=D.lb;
+  const rows=(t==="overall"?lb.overall:lb.rows.filter(r=>lv==="All"||r.level===lv)).slice(0,100);
+  return <><h1>Leaderboard</h1><div className="row" style={{marginBottom:8}}>{[["gw","Gameweek "+(lb.gw||"")],["overall","Overall"]].map(([k,l])=><button key={k} className={"b "+(t===k?"":"g")} onClick={()=>setT(k)}>{l}</button>)}
+    {t==="gw"&&<select value={lv} onChange={e=>setLv(e.target.value)} style={{width:140}}>{["All",...LEVELS.map(l=>l.id)].map(x=><option key={x}>{x}</option>)}</select>}</div>
+    <p className="mute">Top 100. Updated by admin{lb.t?": "+new Date(lb.t).toLocaleString():""}. Ties share prizes and skip occupied ranks.</p>
+    <div className="card scroll"><table><thead><tr><th>#</th><th>Baller</th>{t==="gw"&&<><th>Team</th><th>Level</th></>}<th>Pts</th>{t==="gw"&&<th>Prize</th>}</tr></thead><tbody>
+      {rows.length?rows.map((r,i)=><tr key={i}><td>{rows.findIndex(x=>x.pts===r.pts)+1}</td><td>{r.baller}</td>{t==="gw"&&<><td>{r.team}</td><td>{r.level}</td></>}<td>{r.pts}</td>{t==="gw"&&<td>{r.prize?naira(r.prize):""}</td>}</tr>):<tr><td colSpan="6" className="mute">Nothing published yet.</td></tr>}</tbody></table></div></>
+}
+
+function Wallet({st,update,user}){
+  const[amt,setAmt]=useState(""),[rc,setRc]=useState(null),[wd,setWd]=useState({a:"",dest:"Bank",bank:"",acct:"",nm:""}),[msg,setMsg]=useState("");
+  const avail=st.wallet-st.reserved;
+  function file(e){const f=e.target.files[0];if(!f)return;setMsg("Compressing…");compress(f).then(d=>{setRc(d);setMsg("Receipt ready ("+Math.round(d.length/1024)+" KB after compression).")}).catch(x=>{setRc(null);setMsg(x.message)})}
+  async function dep(){const a=+amt;if(!(a>=100))return setMsg("Minimum deposit is ₦100.");
+    const now=Date.now(),sum=ms=>st.deposits.filter(x=>x.status!=="rejected"&&now-x.d<ms).reduce((t,x)=>t+x.a,0),LM=st.limits;if(LM.d&&sum(864e5)+a>LM.d)return setMsg("This would pass your daily deposit limit.");if(LM.w&&sum(6048e5)+a>LM.w)return setMsg("This would pass your weekly deposit limit.");if(LM.m&&sum(2592e6)+a>LM.m)return setMsg("This would pass your monthly deposit limit.");
+    if(!rc)return setMsg("Upload your payment receipt.");
+    const id=Date.now()+"";try{await API.putReceipt(user.uid+"_"+id,user.uid,rc)}catch(x){return setMsg("Could not save receipt: "+x.message)}update(s=>{s.deposits.unshift({id,a,rc:"saved",status:"pending",d:Date.now()});return s});setAmt("");setRc(null);setMsg("Deposit submitted. It is pending admin approval.")}
+  function wdr(){const a=+wd.a;if(a<500)return setMsg("Minimum withdrawal is ₦500.");if(a>avail)return setMsg("Amount exceeds available balance.");if(!wd.acct||!wd.nm)return setMsg("Enter account details.");
+    update(s=>{s.reserved+=a;s.withdrawals.unshift({id:Date.now()+"",a,dest:wd.dest,bank:wd.bank,acct:wd.acct,nm:wd.nm,status:"pending",d:Date.now()});return s});setMsg("Withdrawal requested. Funds are reserved.")}
+  const setLim=k=>e=>update(s=>{s.limits[k]=+e.target.value||0;return s});
+  return <><h1>Wallet</h1><div className="card"><div className="mute">Available</div><div className="stat">{naira(avail)}</div><div className="mute">Reserved for withdrawals: {naira(st.reserved)}</div></div>
+    {msg&&<div className="warn">{msg}</div>}
+    <div className="grid"><div className="card"><h3>Deposit</h3><p className="mute">Transfer to: {BANK.bank}, {BANK.acct}, {BANK.name}. Upload the receipt after paying.</p>
+      <label>Amount (₦)</label><input type="number" value={amt} onChange={e=>setAmt(e.target.value)}/><label>Receipt</label><input type="file" accept="image/*" onChange={file}/>
+      <button className="b y" style={{marginTop:8}} onClick={dep}>Submit for approval</button></div>
+    <div className="card"><h3>Withdraw</h3><label>Amount (min ₦500)</label><input type="number" value={wd.a} onChange={e=>setWd({...wd,a:e.target.value})}/>
+      <label>Destination</label><select value={wd.dest} onChange={e=>setWd({...wd,dest:e.target.value})}>{["Bank","OPay","PalmPay","Moniepoint"].map(x=><option key={x}>{x}</option>)}</select>
+      {wd.dest==="Bank"&&<><label>Bank name</label><input value={wd.bank} onChange={e=>setWd({...wd,bank:e.target.value})}/></>}
+      <label>Account number</label><input value={wd.acct} onChange={e=>setWd({...wd,acct:e.target.value})}/><label>Account name</label><input value={wd.nm} onChange={e=>setWd({...wd,nm:e.target.value})}/>
+      <button className="b" style={{marginTop:8}} onClick={wdr}>Request withdrawal</button></div></div>
+    <div className="card"><h3>Responsible gaming</h3><div className="row"><div style={{flex:1}}><label>Daily deposit limit (₦)</label><input type="number" defaultValue={st.limits.d||""} onBlur={setLim("d")}/></div><div style={{flex:1}}><label>Weekly</label><input type="number" defaultValue={st.limits.w||""} onBlur={setLim("w")}/></div><div style={{flex:1}}><label>Monthly</label><input type="number" defaultValue={st.limits.m||""} onBlur={setLim("m")}/></div></div>
+      <button className="b g" style={{marginTop:8}} onClick={()=>confirm("Self-exclude for 30 days? You will not be able to enter competitions.")&&update(s=>{s.excluded=Date.now()+30*864e5;return s})}>Self-exclude for 30 days</button></div>
+    <div className="card scroll"><h3>History</h3><table><tbody>{[...st.tx.map(t=>[t.d,t.t,naira(t.a)]),...st.deposits.map(t=>[t.d,"Deposit ("+t.status+")",naira(t.a)]),...st.withdrawals.map(t=>[t.d,"Withdrawal ("+t.status+")",naira(t.a)])].sort((a,b)=>b[0]-a[0]).map((r,i)=><tr key={i}><td>{new Date(r[0]).toLocaleDateString()}</td><td>{r[1]}</td><td>{r[2]}</td></tr>)}</tbody></table></div></>
+}
+
+function Info(){
+  const[s,setS]=useState({min:90,goals:0,assists:0,cs:false,yc:0,rc:0,og:0,pensSaved:0});const[pos,setPos]=useState("FWD"),[c,setC]=useState(false);
+  const n=k=>e=>setS({...s,[k]:+e.target.value});
+  return <><h1>Rules</h1>
+    <div className="card"><h3>Scoring</h3><p>Plays 1–59 min +1, 60+ min +2. Yellow −1, red −3, own goal −2. Not playing 0. Postponed match +1. Captain ×2.</p>
+      <p>Forward: goal +10, assist +5. Midfielder: goal +8, assist +6, clean sheet +2. Defender/GK: goal +12, assist +6, clean sheet +5. GK penalty save +6.</p></div>
+    <div className="card"><h3>Points calculator</h3><div className="row"><select value={pos} onChange={e=>setPos(e.target.value)} style={{width:90}}>{["GK","DEF","MID","FWD"].map(x=><option key={x}>{x}</option>)}</select>
+      {[["min","Minutes"],["goals","Goals"],["assists","Assists"],["yc","Yellows"],["rc","Reds"],["og","Own goals"],["pensSaved","Pen saves"]].map(([k,l])=><div key={k} style={{width:80}}><label>{l}</label><input type="number" value={s[k]} onChange={n(k)}/></div>)}</div>
+      <label style={{fontWeight:400}}><input type="checkbox" style={{width:"auto"}} onChange={e=>setS({...s,cs:e.target.checked})}/> Clean sheet</label><label style={{fontWeight:400}}><input type="checkbox" style={{width:"auto"}} onChange={e=>setC(e.target.checked)}/> Captain</label>
+      <div className="stat">{playerPoints(pos,s,c)} pts</div></div>
+    <div className="card"><h3>Squad rules</h3><p>15 players: 2 GK, 5 DEF, 5 MID, 3 FWD. Budget ₦100M. Max 2 per club (Super Admin can change). 11 starters + 4 subs. Teams lock 30 minutes before the first match.</p></div>
+    <div className="card"><h3>Responsible gaming &amp; terms</h3><p>You must be 18+, with one account per person. Set deposit limits or self-exclude in Wallet. KYC may be requested before withdrawals. Play within your means. Full Terms and Privacy Policy must be added by OPlaying Ltd. before launch. Cash prizes require the necessary legal and regulatory approvals.</p><p className="mute">Support: support@oplaying.com</p></div></>
+}
+
+function Admin({cfg,setCfg,D,reload}){
+  const[users,setUsers]=useState([]),[sub,setSub]=useState("data"),[msg,setMsg]=useState(""),[busy,setBusy]=useState(false),[q,setQ]=useState(""),[paste,setPaste]=useState(""),[kind,setKind]=useState("bootstrap");
+  const load=()=>API.all().then(a=>{setUsers(a);return a});useEffect(()=>{load()},[]);
+  const mod=async(uid,fn)=>{const u=users.find(x=>x.uid===uid);await API.save(uid,fn(JSON.parse(JSON.stringify(u.st))));load()};
+  const saveCfg=async c=>{setCfg(c);await API.setCfg(c)};
+  const run=async fn=>{setBusy(true);setMsg("Working…");try{setMsg(await fn())}catch(e){setMsg("Error: "+e.message)}setBusy(false)};
+  const P=PLAYERS.map(p=>({...p,price:cfg.prices[p.id]??p.price}));
+  /* imports */
+  const applyBoot=async(boot,fix)=>{const tn={};boot.teams.forEach(t=>tn[t.id]=t.name);
+    const list=boot.elements.map(e=>({id:"p"+e.id,name:e.web_name,club:tn[e.team],pos:["","GK","DEF","MID","FWD"][e.element_type],price:e.now_cost/10,form:+e.form,pts:e.total_points,sel:+e.selected_by_percent,st:e.status,ti:e.transfers_in_event,to:e.transfers_out_event,min:e.minutes}));
+    await API.setDoc("players",{list,t:Date.now()});
+    const kick={},last={};(fix||[]).forEach(f=>{if(f.event&&f.kickoff_time){if(!kick[f.event]||f.kickoff_time<kick[f.event])kick[f.event]=f.kickoff_time;if(!last[f.event]||f.kickoff_time>last[f.event])last[f.event]=f.kickoff_time}});
+    const old=D.gws,gws=boot.events.map(ev=>{const o=old.find(x=>x.id===ev.id)||{};return{id:ev.id,deadline:ev.deadline_time,finished:ev.finished,kick:kick[ev.id]||o.kick||null,last:last[ev.id]||o.last||null}});
+    await API.setDoc("gws",{list:gws});const g=gws.find(x=>!x.finished);
+    await saveCfg({...cfg,gw:g?g.id:cfg.gw,kickoff:g&&g.kick?g.kick:cfg.kickoff});await reload();return "Imported "+list.length+" players and "+gws.length+" Gameweeks. Your manual prices were kept."};
+  const applyLive=async lv=>{const stats={};lv.elements.forEach(x=>{const s=x.stats;stats["p"+x.id]=[s.minutes,s.goals_scored,s.assists,s.clean_sheets,s.yellow_cards,s.red_cards,s.own_goals,s.penalties_saved]});await API.setDoc("live",{gw:cfg.gw,stats,t:Date.now()});await reload();return "Live stats saved for Gameweek "+cfg.gw};
+  const importAll=()=>run(async()=>applyBoot(await fpl("bootstrap-static/"),await fpl("fixtures/")));
+  const doLive=()=>run(async()=>applyLive(await fpl("event/"+cfg.gw+"/live/")));
+  const doPaste=()=>run(async()=>{const j=JSON.parse(paste);if(kind==="bootstrap")return applyBoot(j,null);if(kind==="fixtures"){const gws=D.gws.map(g=>{const f=j.filter(x=>x.event===g.id&&x.kickoff_time).map(x=>x.kickoff_time).sort();return f.length?{...g,kick:f[0],last:f[f.length-1]}:g});await API.setDoc("gws",{list:gws});await reload();return "Fixtures applied."}return applyLive(j)});
+  const publish=()=>run(async()=>{const lvd=await API.doc("live",{gw:0,stats:{}}),all=await API.all();let n=0;const R=[],tot={};
+    for(const u of all){const st=JSON.parse(JSON.stringify(u.st));let ch=false;
+      st.entries.forEach(e=>{if(!(e.adj&&(cfg.scoreLog||[]).some(l=>l.entry===e.id))&&e.gw===lvd.gw){const p=entryPts(e,lvd);if(p!==e.pts){e.pts=p;ch=true;n++}}tot[st.name]=(tot[st.name]||0)+(e.pts||0);if(e.gw===cfg.gw)R.push({id:e.id,baller:st.name,team:e.team,level:e.level,pts:e.pts||0})});
+      if(ch)await API.save(u.uid,st)}
+    LEVELS.forEach(L=>{const es=R.filter(r=>r.level===L.id).sort((a,b)=>b.pts-a.pts),gross=Math.max(es.length*L.fee,(cfg.minPool||{})[L.id]||0),d=distribute(es,prizeTable(gross));es.forEach(r=>r.prize=d[r.id]||0)});
+    R.sort((a,b)=>b.pts-a.pts);const overall=Object.entries(tot).map(([baller,pts])=>({baller,pts})).sort((a,b)=>b.pts-a.pts).slice(0,100);
+    await API.setDoc("lb",{gw:cfg.gw,rows:R.slice(0,300),overall,t:Date.now()});await reload();await load();return "Recalculated "+n+" entries and published the leaderboard."});
+  const autoPrice=()=>run(async()=>{const mv=priceMoves(P,cfg);if(!mv.length)return "No price changes today (not enough data or no player met the rules).";
+    const prices={...cfg.prices},log=[...(cfg.priceLog||[])];mv.forEach(({p,d})=>{const nw=+(p.price+d).toFixed(1);prices[p.id]=nw;log.unshift({id:p.id,name:p.name,prev:p.price,now:nw,diff:d,d:Date.now(),auto:true})});
+    await saveCfg({...cfg,prices,priceLog:log.slice(0,300)});return mv.length+" prices changed ("+mv.filter(x=>x.d>0).length+" up, "+mv.filter(x=>x.d<0).length+" down)."});
+  /* requests */
+  const dep=(uid,id,ok)=>mod(uid,s=>{const d=s.deposits.find(x=>x.id===id);if(d.status!=="pending")return s;d.status=ok?"approved":"rejected";if(ok){s.wallet+=d.a;s.tx.unshift({t:"Deposit approved",a:d.a,d:Date.now()})}return s});
+  const wdr=(uid,id,act)=>mod(uid,s=>{const w=s.withdrawals.find(x=>x.id===id);
+    if(act==="approve"&&w.status==="pending")w.status="approved";
+    else if(act==="reject"&&(w.status==="pending"||w.status==="approved")){w.status="rejected";s.reserved-=w.a}
+    else if(act==="paid"&&w.status==="approved"){w.status="paid";s.reserved-=w.a;s.wallet-=w.a;s.tx.unshift({t:"Withdrawal paid",a:-w.a,d:Date.now()})}return s});
+  const setPrice=(p,v)=>{v=+v;if(!v||v===p.price)return;const log=[{id:p.id,name:p.name,prev:p.price,now:v,diff:+(v-p.price).toFixed(1),d:Date.now()},...(cfg.priceLog||[])].slice(0,300);saveCfg({...cfg,prices:{...cfg.prices,[p.id]:v},manual:{...cfg.manual,[p.id]:true},priceLog:log})};
+  const setPts=(uid,id,v)=>{mod(uid,s=>{const e=s.entries.find(x=>x.id===id);e.pts=+v;e.adj=true;return s});saveCfg({...cfg,scoreLog:[{uid,entry:id,pts:+v,d:Date.now()},...(cfg.scoreLog||[])].slice(0,200)})};
+  const viewRc=(uid,d)=>{const w=window.open("","_blank");const show=x=>{w&&w.document.write(x?'<img style="max-width:100%" src="'+x+'">':"Receipt not found")};
+    if(typeof d.rc==="string"&&d.rc.startsWith("data:"))show(d.rc);else API.getReceipt(uid+"_"+d.id).then(r=>show(r&&r.data)).catch(()=>show(null))};
+  const rows=users.flatMap(u=>u.st.entries.map(e=>({u,e})));
+  /* prizes */
+  const gwRows=rows.filter(r=>r.e.gw===cfg.gw);
+  const gwo=D.gws.find(g=>g.id===cfg.gw),ready=!gwo||!gwo.last||Date.now()>=new Date(gwo.last).getTime()+3*36e5;
+  const lvl=LEVELS.map(L=>{const es=gwRows.filter(r=>r.e.level===L.id).map(r=>({...r,id:r.e.id,pts:r.e.pts||0})).sort((a,b)=>b.pts-a.pts);const gross=Math.max(es.length*L.fee,(cfg.minPool||{})[L.id]||0),tb=prizeTable(gross);return{L,es,gross,tb,pool:tb.reduce((a,b)=>a+b,0),d:distribute(es,tb),done:(cfg.final||{})[cfg.gw+"-"+L.id]}});
+  const approve=x=>run(async()=>{if(!ready&&!confirm("Matches may not be finished. Credit prizes anyway?"))return "Cancelled.";
+    const all=await API.all(),by={};x.es.forEach(r=>{const p=x.d[r.id];if(p)by[r.uid]=(by[r.uid]||0)+p});let t=0;
+    for(const u of all){if(by[u.uid]){const st=JSON.parse(JSON.stringify(u.st));st.wallet+=by[u.uid];st.tx.unshift({t:"Prize GW"+cfg.gw+" "+x.L.id,a:by[u.uid],d:Date.now()});await API.save(u.uid,st);t+=by[u.uid]}}
+    await saveCfg({...cfg,final:{...cfg.final,[cfg.gw+"-"+x.L.id]:{t:Date.now(),total:t}}});await load();return "Credited "+naira(t)+" to winners."});
+  /* reports */
+  const sum=f=>users.reduce((t,u)=>t+f(u.st),0);
+  const fees=sum(s=>s.entries.reduce((t,e)=>t+(e.fee??LEVELS.find(l=>l.id===e.level).fee),0)),deps=sum(s=>s.deposits.filter(d=>d.status==="approved").reduce((t,d)=>t+d.a,0)),wds=sum(s=>s.withdrawals.filter(w=>w.status==="paid").reduce((t,w)=>t+w.a,0)),won=sum(s=>s.tx.filter(t=>t.t.startsWith("Prize")).reduce((t,x)=>t+x.a,0));
+  const T=[["data","Data"],["req","Requests"],["users","Users"],["gw","Gameweeks"],["price","Prices"],["score","Scoring"],["prize","Prizes"],["rep","Reports"]];
+  const Btn=({f,children,y})=><button className={"b "+(y?"y":"")} disabled={busy} onClick={f}>{children}</button>;
+  return <><h1>Super Admin</h1><div className="row" style={{marginBottom:10}}>{T.map(([k,l])=><button key={k} className={"b "+(sub===k?"":"g")} onClick={()=>setSub(k)}>{l}</button>)}</div>
+  {msg&&<div className="warn">{msg}</div>}
+  {sub==="data"&&<><div className="card"><h3>Football data (free FPL API)</h3><p className="mute">{PLAYERS.length} players loaded · {D.gws.length} Gameweeks · active GW {cfg.gw}. Imports keep your manual prices.</p>
+    <div className="row"><Btn y f={importAll}>1. Import players, fixtures &amp; Gameweeks</Btn><Btn f={doLive}>2. Load live points (GW {cfg.gw})</Btn><Btn f={publish}>3. Recalculate &amp; publish leaderboard</Btn><Btn f={autoPrice}>Run price update</Btn></div></div>
+    <div className="card"><h3>Paste JSON (if the proxies fail)</h3><p className="mute">Open the FPL URL in your browser, copy all the text, paste here. bootstrap-static/ · fixtures/ · event/{"{gw}"}/live/ on fantasy.premierleague.com/api/</p>
+      <select value={kind} onChange={e=>setKind(e.target.value)}><option value="bootstrap">bootstrap-static</option><option value="fixtures">fixtures</option><option value="live">live</option></select><textarea value={paste} onChange={e=>setPaste(e.target.value)} rows="4" style={{width:"100%",margin:"8px 0"}}/><Btn f={doPaste}>Apply pasted JSON</Btn></div></>}
+  {sub==="req"&&<><div className="card scroll"><h3>Deposits</h3><table><tbody>{users.flatMap(u=>u.st.deposits.map(d=>({u,d}))).sort((a,b)=>b.d.d-a.d.d).map(({u,d})=><tr key={d.id}><td>{u.st.name}</td><td>{naira(d.a)}</td><td><button className="b g" onClick={()=>viewRc(u.uid,d)}>Receipt</button></td><td>{d.status}</td><td>{d.status==="pending"&&<div className="row"><button className="b" onClick={()=>dep(u.uid,d.id,true)}>Approve</button><button className="b r" onClick={()=>dep(u.uid,d.id,false)}>Reject</button></div>}</td></tr>)}</tbody></table></div>
+    <div className="card scroll"><h3>Withdrawals</h3><table><tbody>{users.flatMap(u=>u.st.withdrawals.map(w=>({u,w}))).sort((a,b)=>b.w.d-a.w.d).map(({u,w})=><tr key={w.id}><td>{u.st.name}</td><td>{naira(w.a)}</td><td>{w.dest} {w.bank} {w.acct} {w.nm}</td><td>{w.status}</td><td><div className="row">{w.status==="pending"&&<button className="b" onClick={()=>wdr(u.uid,w.id,"approve")}>Approve</button>}{w.status==="approved"&&<button className="b y" onClick={()=>wdr(u.uid,w.id,"paid")}>Mark paid</button>}{(w.status==="pending"||w.status==="approved")&&<button className="b r" onClick={()=>wdr(u.uid,w.id,"reject")}>Reject</button>}</div></td></tr>)}</tbody></table></div></>}
+  {sub==="users"&&<div className="card scroll"><h3>Ballers ({users.length})</h3><table><tbody>{users.map(u=><tr key={u.uid}><td>{u.st.name}<div className="mute">{u.st.email}</div></td><td>{naira(u.st.wallet)}</td><td><button className={"b "+(u.st.suspended?"y":"r")} onClick={()=>mod(u.uid,s=>{s.suspended=!s.suspended;return s})}>{u.st.suspended?"Unsuspend":"Suspend"}</button></td></tr>)}</tbody></table></div>}
+  {sub==="gw"&&<><div className="card"><h3>Active Gameweek</h3><label>Gameweek number</label><input type="number" value={cfg.gw} onChange={e=>saveCfg({...cfg,gw:+e.target.value})}/>
+    <label>First match kick-off (teams lock 30 min before)</label><input type="datetime-local" value={cfg.kickoff?toLocal(cfg.kickoff):""} onChange={e=>e.target.value&&saveCfg({...cfg,kickoff:new Date(e.target.value).toISOString()})}/>
+    <label>Max players per club</label><input type="number" value={cfg.maxClub} onChange={e=>saveCfg({...cfg,maxClub:+e.target.value||2})}/></div>
+    <div className="card scroll"><h3>All Gameweeks</h3><p className="mute">Auto-published 14 days before the first match. Hide any you want to hold back.</p><table><tbody>{D.gws.map(g=><tr key={g.id}><td>GW {g.id}</td><td>{g.kick?new Date(g.kick).toLocaleString():"no fixtures yet"}</td><td>{g.finished?"finished":""}</td><td><div className="row"><button className="b g" onClick={()=>saveCfg({...cfg,gw:g.id,kickoff:g.kick||""})}>Set active</button><button className="b g" onClick={()=>saveCfg({...cfg,hidden:{...cfg.hidden,[g.id]:!cfg.hidden[g.id]}})}>{cfg.hidden[g.id]?"Show":"Hide"}</button></div></td></tr>)}</tbody></table></div></>}
+  {sub==="price"&&<><div className="card scroll"><h3>Player prices (₦M) &amp; availability</h3><input placeholder="Search player or club" value={q} onChange={e=>setQ(e.target.value)}/><table><tbody>{P.filter(p=>(p.name+p.club).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.pts-a.pts).slice(0,50).map(p=><tr key={p.id}><td>{p.name}<div className="mute">{p.club}{cfg.manual[p.id]?" · manual":""}</div></td><td><input type="number" step="0.1" defaultValue={p.price} style={{width:80}} onBlur={e=>setPrice(p,e.target.value)}/></td><td><label style={{fontWeight:400}}><input type="checkbox" style={{width:"auto"}} checked={!!cfg.out[p.id]} onChange={e=>saveCfg({...cfg,out:{...cfg.out,[p.id]:e.target.checked}})}/> out</label></td></tr>)}</tbody></table></div>
+    <div className="card scroll"><h3>Price history</h3><table><tbody>{(cfg.priceLog||[]).map((l,i)=><tr key={i}><td>{l.name}</td><td>{l.prev} → {l.now}</td><td>{l.diff>0?"+":""}{l.diff}</td><td>{new Date(l.d).toLocaleDateString()}{l.auto?" auto":""}</td></tr>)}</tbody></table></div></>}
+  {sub==="score"&&<div className="card scroll"><h3>Correct entry points (GW {cfg.gw})</h3><p className="mute">Corrected entries are protected from automatic recalculation.</p><table><tbody>{gwRows.map(({u,e})=><tr key={e.id}><td>{e.team}<div className="mute">{u.st.name} · {e.level}{e.adj?" · corrected":""}</div></td><td><input type="number" defaultValue={e.pts} style={{width:80}} onBlur={ev=>+ev.target.value!==e.pts&&setPts(u.uid,e.id,ev.target.value)}/></td></tr>)}</tbody></table>
+    <h3 style={{marginTop:12}}>Change log</h3>{(cfg.scoreLog||[]).map((l,i)=><div key={i} className="mute">{new Date(l.d).toLocaleString()} – entry {l.entry} set to {l.pts}</div>)}</div>}
+  {sub==="prize"&&<><div className="card"><h3>Winners – GW {cfg.gw}</h3><p className="mute">Run “Recalculate &amp; publish” first so points are current. Confirm about 1 hour after the last match. {ready?"Ready to approve.":"Matches may still be in progress."}</p></div>
+    {lvl.map(x=><div key={x.L.id} className="card scroll"><h3>{x.L.id}</h3><p>{x.es.length} entries · fees {naira(x.es.length*x.L.fee)} · prize pool {naira(x.pool)} · revenue {naira(x.gross-x.pool)}</p>
+      <label>Guaranteed minimum pool (₦)</label><input type="number" defaultValue={(cfg.minPool||{})[x.L.id]||""} onBlur={e=>saveCfg({...cfg,minPool:{...cfg.minPool,[x.L.id]:+e.target.value||0}})}/>
+      <table><tbody>{x.es.slice(0,10).map(r=><tr key={r.id}><td>{r.u.st.name} – {r.e.team}</td><td>{r.pts} pts</td><td>{x.d[r.id]?naira(x.d[r.id]):""}</td></tr>)}</tbody></table>
+      {x.done?<p className="ok">Prizes credited {new Date(x.done.t).toLocaleString()} ({naira(x.done.total)}).</p>:<button className="b y" disabled={busy||!x.es.length} onClick={()=>approve(x)}>Approve &amp; credit prizes</button>}</div>)}</>}
+  {sub==="rep"&&<div className="card"><h3>Platform report</h3><table><tbody>{[["Ballers",users.length],["Deposits approved",naira(deps)],["Withdrawals paid",naira(wds)],["Entry fees (all time)",naira(fees)],["Prize pool share (57.5%)",naira(Math.round(fees*.575))],["Company revenue (42.5%)",naira(Math.round(fees*.425))],["Prizes credited",naira(won)],["Total in player wallets",naira(sum(s=>s.wallet))]].map(([a,b])=><tr key={a}><td>{a}</td><td><b>{b}</b></td></tr>)}</tbody></table></div>}
+  </>
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
