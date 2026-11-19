@@ -1,0 +1,39 @@
+name: Update FPL data
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and slim FPL data
+        run: |
+          mkdir -p fpl
+          UA="Mozilla/5.0 (compatible; OPlayingBot/1.0)"
+          API=https://fantasy.premierleague.com/api
+          curl -fsSL -A "$UA" $API/bootstrap-static/ -o raw_boot.json
+          curl -fsSL -A "$UA" $API/fixtures/ -o raw_fix.json
+          jq '{events:[.events[]|{id,deadline_time,finished,is_current,is_next}],
+               teams:[.teams[]|{id,name,short_name}],
+               elements:[.elements[]|{id,web_name,team,element_type,now_cost,form,total_points,selected_by_percent,status,news,transfers_in_event,transfers_out_event,minutes}]}' raw_boot.json > fpl/bootstrap.json
+          jq '[.[]|{event,kickoff_time,team_h,team_a,finished,team_h_score,team_a_score}]' raw_fix.json > fpl/fixtures.json
+          GW=$(jq '([.events[]|select(.is_current==true)][0].id) // ([.events[]|select(.finished==false)][0].id) // 38' raw_boot.json)
+          curl -fsSL -A "$UA" $API/event/$GW/live/ -o raw_live.json
+          jq -n --argjson gw "$GW" --slurpfile d raw_live.json \
+            '{gw:$gw, t:(now*1000|floor), data:{elements:[$d[0].elements[]|{id,stats:{minutes:.stats.minutes,goals_scored:.stats.goals_scored,assists:.stats.assists,clean_sheets:.stats.clean_sheets,yellow_cards:.stats.yellow_cards,red_cards:.stats.red_cards,own_goals:.stats.own_goals,penalties_saved:.stats.penalties_saved}}]}}' > fpl/live.json
+          rm raw_boot.json raw_fix.json raw_live.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name "fpl-bot"
+          git config user.email "fpl-bot@users.noreply.github.com"
+          git add fpl
+          git diff --cached --quiet || (git commit -m "Update FPL data" && git push)
