@@ -2,7 +2,7 @@ name: Update FPL data
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ jobs:
 
       - name: Download and slim FPL data
         run: |
-          mkdir -p fpl
+          mkdir -p fpl/gw
           UA="Mozilla/5.0 (compatible; OPlayingBot/1.0)"
           API=https://fantasy.premierleague.com/api
           curl -fsSL -A "$UA" $API/bootstrap-static/ -o raw_boot.json
@@ -24,12 +24,20 @@ jobs:
           jq '{events:[.events[]|{id,deadline_time,finished,is_current,is_next}],
                teams:[.teams[]|{id,name,short_name}],
                elements:[.elements[]|{id,web_name,team,element_type,now_cost,form,total_points,selected_by_percent,status,news,transfers_in_event,transfers_out_event,minutes}]}' raw_boot.json > fpl/bootstrap.json
-          jq '[.[]|{event,kickoff_time,team_h,team_a,finished,team_h_score,team_a_score}]' raw_fix.json > fpl/fixtures.json
+          jq '[.[]|{event,kickoff_time,team_h,team_a,finished,team_h_score,team_a_score,team_h_difficulty,team_a_difficulty}]' raw_fix.json > fpl/fixtures.json
           GW=$(jq '([.events[]|select(.is_current==true)][0].id) // ([.events[]|select(.finished==false)][0].id) // 38' raw_boot.json)
           curl -fsSL -A "$UA" $API/event/$GW/live/ -o raw_live.json
           jq -n --argjson gw "$GW" --slurpfile d raw_live.json \
             '{gw:$gw, t:(now*1000|floor), data:{elements:[$d[0].elements[]|{id,stats:{minutes:.stats.minutes,goals_scored:.stats.goals_scored,assists:.stats.assists,clean_sheets:.stats.clean_sheets,yellow_cards:.stats.yellow_cards,red_cards:.stats.red_cards,own_goals:.stats.own_goals,penalties_saved:.stats.penalties_saved,bonus:.stats.bonus}}]}}' > fpl/live.json
-          rm raw_boot.json raw_fix.json raw_live.json
+          # history: one small file per Gameweek (finished weeks are fetched only once)
+          for n in $(seq 1 $GW); do
+            if [ ! -s fpl/gw/$n.json ] || [ "$n" -ge "$((GW-1))" ]; then
+              curl -fsSL -A "$UA" $API/event/$n/live/ -o raw_gw.json || continue
+              jq '[.elements[]|select(.stats.minutes>0)|{key:(.id|tostring),value:[.stats.minutes,.stats.goals_scored,.stats.assists,.stats.clean_sheets,.stats.yellow_cards,.stats.red_cards,.stats.own_goals,.stats.penalties_saved,.stats.bonus]}]|from_entries' raw_gw.json > fpl/gw/$n.json
+            fi
+          done
+          jq -n 'reduce inputs as $d ({}; .[(input_filename|capture("(?<n>[0-9]+)\\.json$").n)]=$d)' fpl/gw/*.json > fpl/hist.json
+          rm -f raw_boot.json raw_fix.json raw_live.json raw_gw.json
 
       - name: Commit if changed
         run: |
