@@ -28,7 +28,7 @@ jobs:
           GW=$(jq '([.events[]|select(.is_current==true)][0].id) // ([.events[]|select(.finished==false)][0].id) // 38' raw_boot.json)
           curl -fsSL -A "$UA" $API/event/$GW/live/ -o raw_live.json
           jq -n --argjson gw "$GW" --slurpfile d raw_live.json \
-            '{gw:$gw, t:(now*1000|floor), data:{elements:[$d[0].elements[]|{id,stats:{minutes:.stats.minutes,goals_scored:.stats.goals_scored,assists:.stats.assists,clean_sheets:.stats.clean_sheets,yellow_cards:.stats.yellow_cards,red_cards:.stats.red_cards,own_goals:.stats.own_goals,penalties_saved:.stats.penalties_saved}}]}}' > fpl/live.json
+            '{gw:$gw, t:(now*1000|floor), data:{elements:[$d[0].elements[]|{id,stats:{minutes:.stats.minutes,goals_scored:.stats.goals_scored,assists:.stats.assists,clean_sheets:.stats.clean_sheets,yellow_cards:.stats.yellow_cards,red_cards:.stats.red_cards,own_goals:.stats.own_goals,penalties_saved:.stats.penalties_saved,bonus:.stats.bonus}}]}}' > fpl/live.json
           rm raw_boot.json raw_fix.json raw_live.json
 
       - name: Commit if changed
