@@ -22,8 +22,8 @@ jobs:
           curl -fsSL -A "$UA" $API/bootstrap-static/ -o raw_boot.json
           curl -fsSL -A "$UA" $API/fixtures/ -o raw_fix.json
           jq '{events:[.events[]|{id,deadline_time,finished,is_current,is_next}],
-               teams:[.teams[]|{id,name,short_name}],
-               elements:[.elements[]|{id,web_name,team,element_type,now_cost,form,total_points,selected_by_percent,status,news,transfers_in_event,transfers_out_event,minutes}]}' raw_boot.json > fpl/bootstrap.json
+               teams:[.teams[]|{id,name,short_name,code}],
+               elements:[.elements[]|{id,web_name,team,element_type,now_cost,form,total_points,selected_by_percent,status,news,news_added,chance_of_playing_next_round,transfers_in_event,transfers_out_event,minutes}]}' raw_boot.json > fpl/bootstrap.json
           jq '[.[]|{event,kickoff_time,team_h,team_a,finished,team_h_score,team_a_score,team_h_difficulty,team_a_difficulty}]' raw_fix.json > fpl/fixtures.json
           GW=$(jq '([.events[]|select(.is_current==true)][0].id) // ([.events[]|select(.finished==false)][0].id) // 38' raw_boot.json)
           curl -fsSL -A "$UA" $API/event/$GW/live/ -o raw_live.json
@@ -38,6 +38,36 @@ jobs:
           done
           jq -n 'reduce inputs as $d ({}; .[(input_filename|capture("(?<n>[0-9]+)\\.json$").n)]=$d)' fpl/gw/*.json > fpl/hist.json
           rm -f raw_boot.json raw_fix.json raw_live.json raw_gw.json
+
+      - name: Download latest football headlines
+        run: |
+          python3 - <<'PY'
+          import urllib.request, xml.etree.ElementTree as ET, json, html
+          from email.utils import parsedate_to_datetime
+          feeds = [("BBC Sport", "https://feeds.bbci.co.uk/sport/football/premier-league/rss.xml"),
+                   ("Sky Sports", "https://www.skysports.com/rss/12040")]
+          items = []
+          for src, url in feeds:
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                  root = ET.fromstring(urllib.request.urlopen(req, timeout=20).read())
+                  for it in root.iter("item"):
+                      t = (it.findtext("title") or "").strip()
+                      l = (it.findtext("link") or "").strip()
+                      d = (it.findtext("pubDate") or "").strip()
+                      if not (t and l):
+                          continue
+                      try:
+                          ts = int(parsedate_to_datetime(d).timestamp())
+                      except Exception:
+                          ts = 0
+                      items.append({"s": src, "t": html.unescape(t), "l": l, "ts": ts})
+              except Exception as e:
+                  print("feed failed:", url, e)
+          items.sort(key=lambda i: -i["ts"])
+          with open("fpl/news.json", "w", encoding="utf-8") as f:
+              json.dump(items[:30], f, ensure_ascii=False)
+          PY
 
       - name: Commit if changed
         run: |
