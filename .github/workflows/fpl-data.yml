@@ -1,8 +1,9 @@
-name: Update FPL data
+
+  name: Update FPL data
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -24,8 +25,14 @@ jobs:
           jq '{events:[.events[]|{id,deadline_time,finished,is_current,is_next}],
                teams:[.teams[]|{id,name,short_name,code}],
                elements:[.elements[]|{id,web_name,team,element_type,now_cost,form,total_points,selected_by_percent,status,news,news_added,chance_of_playing_next_round,transfers_in_event,transfers_out_event,minutes}]}' raw_boot.json > fpl/bootstrap.json
-          jq '[.[]|{event,kickoff_time,team_h,team_a,finished,team_h_score,team_a_score,team_h_difficulty,team_a_difficulty}]' raw_fix.json > fpl/fixtures.json
-          GW=$(jq '([.events[]|select(.is_current==true)][0].id) // ([.events[]|select(.finished==false)][0].id) // 38' raw_boot.json)
+          jq '[.[]|{event,kickoff_time,team_h,team_a,started,finished,finished_provisional,minutes,team_h_score,team_a_score,team_h_difficulty,team_a_difficulty}]' raw_fix.json > fpl/fixtures.json
+          # Gameweek being played = latest Gameweek that already has a kicked-off match
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          GW=$(jq --arg now "$NOW" '([.[]|select(.event!=null and .kickoff_time!=null and .kickoff_time<=$now)|.event]|max)' raw_fix.json)
+          if [ -z "$GW" ] || [ "$GW" = "null" ]; then
+            GW=$(jq '([.events[]|select(.is_current==true)][0].id) // ([.events[]|select(.finished==false)][0].id) // 38' raw_boot.json)
+          fi
+          echo "Live Gameweek: $GW"
           curl -fsSL -A "$UA" $API/event/$GW/live/ -o raw_live.json
           jq -n --argjson gw "$GW" --slurpfile d raw_live.json \
             '{gw:$gw, t:(now*1000|floor), data:{elements:[$d[0].elements[]|{id,stats:{minutes:.stats.minutes,goals_scored:.stats.goals_scored,assists:.stats.assists,clean_sheets:.stats.clean_sheets,yellow_cards:.stats.yellow_cards,red_cards:.stats.red_cards,own_goals:.stats.own_goals,penalties_saved:.stats.penalties_saved,bonus:.stats.bonus}}]}}' > fpl/live.json
