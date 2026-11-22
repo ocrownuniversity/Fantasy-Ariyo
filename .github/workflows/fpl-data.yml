@@ -34,7 +34,7 @@ jobs:
           echo "Live Gameweek: $GW"
           curl -fsSL -A "$UA" $API/event/$GW/live/ -o raw_live.json
           jq -n --argjson gw "$GW" --slurpfile d raw_live.json \
-            '{gw:$gw, t:(now*1000|floor), data:{elements:[$d[0].elements[]|{id,stats:{minutes:.stats.minutes,goals_scored:.stats.goals_scored,assists:.stats.assists,clean_sheets:.stats.clean_sheets,yellow_cards:.stats.yellow_cards,red_cards:.stats.red_cards,own_goals:.stats.own_goals,penalties_saved:.stats.penalties_saved,bonus:.stats.bonus}}]}}' > fpl/live.json
+            '{gw:$gw, t:(now*1000|floor), data:{elements:[$d[0].elements[]|{id,stats:{minutes:.stats.minutes,goals_scored:.stats.goals_scored,assists:.stats.assists,clean_sheets:.stats.clean_sheets,yellow_cards:.stats.yellow_cards,red_cards:.stats.red_cards,own_goals:.stats.own_goals,penalties_saved:.stats.penalties_saved,bonus:.stats.bonus,starts:.stats.starts}}]}}' > fpl/live.json
           # history: one small file per Gameweek (finished weeks are fetched only once)
           for n in $(seq 1 $GW); do
             if [ ! -s fpl/gw/$n.json ] || [ "$n" -ge "$((GW-1))" ]; then
@@ -81,4 +81,3 @@ jobs:
           git config user.email "fpl-bot@users.noreply.github.com"
           git add fpl
           git diff --cached --quiet || (git commit -m "Update FPL data" && git push)
-  
