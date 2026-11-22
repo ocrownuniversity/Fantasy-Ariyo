@@ -1,5 +1,4 @@
-
-  name: Update FPL data
+name: Update FPL data
 
 on:
   schedule:
@@ -22,10 +21,10 @@ jobs:
           API=https://fantasy.premierleague.com/api
           curl -fsSL -A "$UA" $API/bootstrap-static/ -o raw_boot.json
           curl -fsSL -A "$UA" $API/fixtures/ -o raw_fix.json
-          jq '{events:[.events[]|{id,deadline_time,finished,is_current,is_next}],
+          jq '{events:[.events[]|{id,deadline_time,finished,is_current,is_next,average_entry_score,highest_score,most_selected,most_captained,most_vice_captained,most_transferred_in,top_element,top_element_info}],
                teams:[.teams[]|{id,name,short_name,code}],
                elements:[.elements[]|{id,web_name,team,element_type,now_cost,form,total_points,selected_by_percent,status,news,news_added,chance_of_playing_next_round,transfers_in_event,transfers_out_event,minutes}]}' raw_boot.json > fpl/bootstrap.json
-          jq '[.[]|{event,kickoff_time,team_h,team_a,started,finished,finished_provisional,minutes,team_h_score,team_a_score,team_h_difficulty,team_a_difficulty}]' raw_fix.json > fpl/fixtures.json
+          jq '[.[]|{event,kickoff_time,team_h,team_a,started,finished,finished_provisional,minutes,team_h_score,team_a_score,team_h_difficulty,team_a_difficulty,stats:[(.stats // [])[]|select(.identifier|IN("goals_scored","assists","own_goals","yellow_cards","red_cards","penalties_saved","penalties_missed","bonus"))|{i:.identifier,a:[.a[]|{e:.element,v:.value}],h:[.h[]|{e:.element,v:.value}]}]}]' raw_fix.json > fpl/fixtures.json
           # Gameweek being played = latest Gameweek that already has a kicked-off match
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           GW=$(jq --arg now "$NOW" '([.[]|select(.event!=null and .kickoff_time!=null and .kickoff_time<=$now)|.event]|max)' raw_fix.json)
@@ -82,3 +81,4 @@ jobs:
           git config user.email "fpl-bot@users.noreply.github.com"
           git add fpl
           git diff --cached --quiet || (git commit -m "Update FPL data" && git push)
+  
