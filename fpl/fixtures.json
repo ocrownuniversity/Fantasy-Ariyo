@@ -12024,9 +12024,9 @@
     "team_a": 16,
     "started": true,
     "finished": false,
-    "finished_provisional": false,
-    "minutes": 53,
-    "team_h_score": 2,
+    "finished_provisional": true,
+    "minutes": 90,
+    "team_h_score": 4,
     "team_a_score": 0,
     "team_h_difficulty": 3,
     "team_a_difficulty": 4,
@@ -12042,6 +12042,14 @@
           {
             "e": 368,
             "v": 1
+          },
+          {
+            "e": 369,
+            "v": 1
+          },
+          {
+            "e": 377,
+            "v": 1
           }
         ]
       },
@@ -12050,11 +12058,19 @@
         "a": [],
         "h": [
           {
+            "e": 366,
+            "v": 1
+          },
+          {
             "e": 369,
             "v": 1
           },
           {
             "e": 379,
+            "v": 1
+          },
+          {
+            "e": 627,
             "v": 1
           }
         ]
@@ -12077,7 +12093,12 @@
       {
         "i": "yellow_cards",
         "a": [],
-        "h": []
+        "h": [
+          {
+            "e": 627,
+            "v": 1
+          }
+        ]
       },
       {
         "i": "red_cards",
@@ -12094,15 +12115,15 @@
         "a": [],
         "h": [
           {
-            "e": 368,
+            "e": 366,
             "v": 3
           },
           {
-            "e": 366,
+            "e": 369,
             "v": 2
           },
           {
-            "e": 369,
+            "e": 368,
             "v": 1
           }
         ]
