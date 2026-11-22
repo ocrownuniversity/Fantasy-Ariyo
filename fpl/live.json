@@ -1,6 +1,6 @@
 {
   "gw": 11,
-  "t": 1795349172753,
+  "t": 1795360752634,
   "data": {
     "elements": [
       {
@@ -1518,7 +1518,7 @@
       {
         "id": 109,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1526,7 +1526,7 @@
           "red_cards": 0,
           "own_goals": 0,
           "penalties_saved": 0,
-          "bonus": 0
+          "bonus": 1
         }
       },
       {
@@ -1588,7 +1588,7 @@
       {
         "id": 114,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1602,7 +1602,7 @@
       {
         "id": 115,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1616,7 +1616,7 @@
       {
         "id": 116,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1658,7 +1658,7 @@
       {
         "id": 119,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1728,7 +1728,7 @@
       {
         "id": 124,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1736,13 +1736,13 @@
           "red_cards": 0,
           "own_goals": 0,
           "penalties_saved": 0,
-          "bonus": 0
+          "bonus": 2
         }
       },
       {
         "id": 125,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1770,7 +1770,7 @@
       {
         "id": 127,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -1798,7 +1798,7 @@
       {
         "id": 129,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -3352,7 +3352,7 @@
       {
         "id": 240,
         "stats": {
-          "minutes": 0,
+          "minutes": 44,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -3898,7 +3898,7 @@
       {
         "id": 279,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -3912,7 +3912,7 @@
       {
         "id": 280,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -3996,7 +3996,7 @@
       {
         "id": 286,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -4038,7 +4038,7 @@
       {
         "id": 289,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -4052,7 +4052,7 @@
       {
         "id": 290,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -4122,7 +4122,7 @@
       {
         "id": 295,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -7048,11 +7048,11 @@
       {
         "id": 504,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
-          "yellow_cards": 0,
+          "yellow_cards": 1,
           "red_cards": 0,
           "own_goals": 0,
           "penalties_saved": 0,
@@ -8000,7 +8000,7 @@
       {
         "id": 572,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -8008,7 +8008,7 @@
           "red_cards": 0,
           "own_goals": 0,
           "penalties_saved": 0,
-          "bonus": 0
+          "bonus": 3
         }
       },
       {
@@ -8056,7 +8056,7 @@
       {
         "id": 576,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -8196,11 +8196,11 @@
       {
         "id": 586,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
-          "yellow_cards": 0,
+          "yellow_cards": 1,
           "red_cards": 0,
           "own_goals": 0,
           "penalties_saved": 0,
@@ -8238,7 +8238,7 @@
       {
         "id": 589,
         "stats": {
-          "minutes": 0,
+          "minutes": 10,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -8630,7 +8630,7 @@
       {
         "id": 617,
         "stats": {
-          "minutes": 0,
+          "minutes": 45,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -8938,7 +8938,7 @@
       {
         "id": 639,
         "stats": {
-          "minutes": 0,
+          "minutes": 55,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
@@ -8980,7 +8980,7 @@
       {
         "id": 642,
         "stats": {
-          "minutes": 0,
+          "minutes": 10,
           "goals_scored": 0,
           "assists": 0,
           "clean_sheets": 0,
