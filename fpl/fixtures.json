@@ -11759,11 +11759,11 @@
         "a": [],
         "h": [
           {
-            "e": 499,
+            "e": 601,
             "v": 3
           },
           {
-            "e": 601,
+            "e": 499,
             "v": 2
           },
           {
@@ -12135,15 +12135,56 @@
     "kickoff_time": "2026-11-23T20:00:00Z",
     "team_h": 4,
     "team_a": 9,
-    "started": false,
+    "started": true,
     "finished": false,
     "finished_provisional": false,
-    "minutes": 0,
-    "team_h_score": null,
-    "team_a_score": null,
+    "minutes": 5,
+    "team_h_score": 0,
+    "team_a_score": 0,
     "team_h_difficulty": 3,
     "team_a_difficulty": 4,
-    "stats": []
+    "stats": [
+      {
+        "i": "goals_scored",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "assists",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "own_goals",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_saved",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_missed",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "yellow_cards",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "red_cards",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "bonus",
+        "a": [],
+        "h": []
+      }
+    ]
   },
   {
     "event": 12,
