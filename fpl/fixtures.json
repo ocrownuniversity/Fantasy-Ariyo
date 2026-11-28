@@ -12360,45 +12360,329 @@
     "kickoff_time": "2026-11-28T15:00:00Z",
     "team_h": 13,
     "team_a": 7,
-    "started": false,
+    "started": true,
     "finished": false,
-    "finished_provisional": false,
-    "minutes": 0,
-    "team_h_score": null,
-    "team_a_score": null,
+    "finished_provisional": true,
+    "minutes": 90,
+    "team_h_score": 3,
+    "team_a_score": 0,
     "team_h_difficulty": 2,
     "team_a_difficulty": 3,
-    "stats": []
+    "stats": [
+      {
+        "i": "goals_scored",
+        "a": [],
+        "h": [
+          {
+            "e": 339,
+            "v": 2
+          },
+          {
+            "e": 346,
+            "v": 1
+          }
+        ]
+      },
+      {
+        "i": "assists",
+        "a": [],
+        "h": [
+          {
+            "e": 331,
+            "v": 1
+          },
+          {
+            "e": 338,
+            "v": 1
+          },
+          {
+            "e": 339,
+            "v": 1
+          }
+        ]
+      },
+      {
+        "i": "own_goals",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_saved",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_missed",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "yellow_cards",
+        "a": [
+          {
+            "e": 176,
+            "v": 1
+          }
+        ],
+        "h": [
+          {
+            "e": 330,
+            "v": 1
+          }
+        ]
+      },
+      {
+        "i": "red_cards",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "bonus",
+        "a": [],
+        "h": [
+          {
+            "e": 339,
+            "v": 3
+          },
+          {
+            "e": 331,
+            "v": 2
+          },
+          {
+            "e": 346,
+            "v": 1
+          }
+        ]
+      }
+    ]
   },
   {
     "event": 12,
     "kickoff_time": "2026-11-28T15:00:00Z",
     "team_h": 16,
     "team_a": 4,
-    "started": false,
+    "started": true,
     "finished": false,
-    "finished_provisional": false,
-    "minutes": 0,
-    "team_h_score": null,
-    "team_a_score": null,
+    "finished_provisional": true,
+    "minutes": 90,
+    "team_h_score": 0,
+    "team_a_score": 4,
     "team_h_difficulty": 3,
     "team_a_difficulty": 3,
-    "stats": []
+    "stats": [
+      {
+        "i": "goals_scored",
+        "a": [
+          {
+            "e": 108,
+            "v": 2
+          },
+          {
+            "e": 87,
+            "v": 1
+          },
+          {
+            "e": 94,
+            "v": 1
+          }
+        ],
+        "h": []
+      },
+      {
+        "i": "assists",
+        "a": [
+          {
+            "e": 95,
+            "v": 3
+          },
+          {
+            "e": 88,
+            "v": 1
+          }
+        ],
+        "h": []
+      },
+      {
+        "i": "own_goals",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_saved",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_missed",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "yellow_cards",
+        "a": [
+          {
+            "e": 100,
+            "v": 1
+          }
+        ],
+        "h": [
+          {
+            "e": 418,
+            "v": 1
+          },
+          {
+            "e": 419,
+            "v": 1
+          },
+          {
+            "e": 420,
+            "v": 1
+          }
+        ]
+      },
+      {
+        "i": "red_cards",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "bonus",
+        "a": [
+          {
+            "e": 108,
+            "v": 3
+          },
+          {
+            "e": 95,
+            "v": 2
+          },
+          {
+            "e": 85,
+            "v": 1
+          }
+        ],
+        "h": []
+      }
+    ]
   },
   {
     "event": 12,
     "kickoff_time": "2026-11-28T17:30:00Z",
     "team_h": 12,
     "team_a": 2,
-    "started": false,
+    "started": true,
     "finished": false,
     "finished_provisional": false,
-    "minutes": 0,
-    "team_h_score": null,
-    "team_a_score": null,
+    "minutes": 57,
+    "team_h_score": 2,
+    "team_a_score": 2,
     "team_h_difficulty": 3,
     "team_a_difficulty": 2,
-    "stats": []
+    "stats": [
+      {
+        "i": "goals_scored",
+        "a": [
+          {
+            "e": 52,
+            "v": 1
+          },
+          {
+            "e": 54,
+            "v": 1
+          }
+        ],
+        "h": [
+          {
+            "e": 305,
+            "v": 1
+          },
+          {
+            "e": 316,
+            "v": 1
+          }
+        ]
+      },
+      {
+        "i": "assists",
+        "a": [
+          {
+            "e": 34,
+            "v": 1
+          },
+          {
+            "e": 53,
+            "v": 1
+          }
+        ],
+        "h": [
+          {
+            "e": 591,
+            "v": 1
+          }
+        ]
+      },
+      {
+        "i": "own_goals",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_saved",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "penalties_missed",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "yellow_cards",
+        "a": [
+          {
+            "e": 45,
+            "v": 1
+          },
+          {
+            "e": 47,
+            "v": 1
+          },
+          {
+            "e": 52,
+            "v": 1
+          },
+          {
+            "e": 54,
+            "v": 1
+          }
+        ],
+        "h": []
+      },
+      {
+        "i": "red_cards",
+        "a": [],
+        "h": []
+      },
+      {
+        "i": "bonus",
+        "a": [
+          {
+            "e": 53,
+            "v": 3
+          },
+          {
+            "e": 54,
+            "v": 2
+          }
+        ],
+        "h": [
+          {
+            "e": 316,
+            "v": 1
+          }
+        ]
+      }
+    ]
   },
   {
     "event": 12,
